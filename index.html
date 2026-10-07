@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0f6fb5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="物件管理">
+<title>物件管理 / Controle de Imóveis</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#1c2733;--mut:#6b7885;--pri:#0f6fb5;--ok:#1f9d55;--warn:#d9822b;--bad:#c0392b;--line:#e1e6eb}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+header{background:var(--pri);color:#fff;padding:10px 16px;display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;flex:1;cursor:pointer;min-width:150px}
+header button,header select{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:6px;padding:7px 11px;font-size:14px;cursor:pointer}
+header select option{color:#000}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:var(--card);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;display:block}
+a.card{transition:transform .1s}a.card:hover{transform:translateY(-2px)}
+.ph{width:100%;aspect-ratio:4/3;background:#dde3e9 center/cover;display:flex;align-items:center;justify-content:center;color:#9aa6b2;font-size:40px}
+.pad{padding:12px}
+.card h3{margin:0 0 4px;font-size:16px}
+.mut{color:var(--mut);font-size:13px}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;color:#fff;margin:2px 4px 2px 0}
+.b-vac,.b-ok{background:var(--ok)}.b-occ,.b-bad{background:var(--bad)}.b-res{background:var(--warn)}.b-gray{background:#8795a1}.b-pri{background:var(--pri)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;align-items:center}
+input,select,textarea{font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+.bar input,.bar select{width:auto}
+.bar input.grow{flex:1;min-width:180px}
+button.btn{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-size:14px;cursor:pointer}
+button.btn.sec{background:#fff;color:var(--pri);border:1px solid var(--pri)}
+button.btn.red{background:var(--bad)}
+button.btn.sm{padding:5px 9px;font-size:12px}
+button.btn:disabled{opacity:.6}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:var(--card);border-radius:12px;padding:10px 12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tile b{display:block;font-size:24px;line-height:1.1}.tile span{font-size:12px;color:var(--mut)}
+.units{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.unit{border-radius:10px;padding:10px 6px;text-align:center;color:#fff;font-weight:600;display:block}
+.unit small{display:block;font-weight:400;font-size:11px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.two{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+.thumbs{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+.thumbs figure{margin:0;text-align:center;font-size:11px;color:var(--mut);flex:none}
+.thumbs img{height:60px;border-radius:6px;cursor:pointer;display:block}
+.big{width:100%;border-radius:12px;max-height:420px;object-fit:cover;background:#dde3e9;cursor:zoom-in}
+.price{font-size:26px;font-weight:700;color:var(--pri)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:500;white-space:nowrap}
+.fac{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin-top:8px}
+.fac div{background:var(--bg);border-radius:8px;padding:7px 9px;font-size:13px}
+.fac .no{opacity:.4;text-decoration:line-through}.fac .unk{opacity:.5;border:1px dashed var(--line)}.fac .co{border-left:4px solid var(--pri)}.fac .own{border-left:4px solid var(--ok)}.fac small{color:var(--mut);display:block;font-size:11px}.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.tl{border-left:3px solid var(--line);margin-left:6px;padding-left:14px}
+.tl>div{margin-bottom:14px;position:relative}
+.tl>div:before{content:"";position:absolute;left:-21px;top:4px;width:11px;height:11px;border-radius:50%;background:var(--pri)}
+.tl>div.cur:before{background:var(--ok)}
+.imgs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.imgs img{height:70px;border-radius:6px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;z-index:20}
+.modal .box{background:#fff;border-radius:14px;padding:18px;width:100%;max-width:560px}
+.modal h2{margin:0 0 12px;font-size:18px}
+.f{margin-bottom:10px}.f label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chk{display:flex;flex-wrap:wrap;gap:10px}.chk label{display:flex;align-items:center;gap:5px;color:var(--ink);font-size:14px;margin:0}.chk input{width:auto}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:30}
+.lightbox img{max-width:95%;max-height:92%}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:99px;z-index:40;font-size:14px}
+.demo{background:#fff4d6;color:#7a5a00;padding:7px 14px;font-size:13px;text-align:center}
+.crumb{margin-bottom:12px;font-size:14px}.crumb a{color:var(--pri)}
+h3.sec{margin:20px 0 8px;font-size:16px}
+/* vistoria */
+.chkrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.chkrow .nm{flex:1;min-width:150px;font-size:15px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--mut)}
+.seg button.on-ok{background:var(--ok);color:#fff}.seg button.on-ng{background:var(--bad);color:#fff}
+.chkrow input.ngtxt{flex-basis:100%;margin-top:2px}
+.issue{background:#fdecea;border-radius:8px;padding:6px 9px;margin-top:4px;font-size:13px}
+.sticky-save{position:sticky;bottom:0;background:var(--bg);padding:10px 0;display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:600px){
+ header{position:static;padding:8px 12px;gap:6px}
+ header h1{flex-basis:100%;font-size:16px}
+ header button,header select{padding:6px 9px;font-size:13px}
+ main{padding:12px}
+ .modal{padding:10px}.modal .box{padding:14px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="home">🏠 <span id="ttl"></span></h1>
+  <button id="bPeople"></button>
+  <button id="bAdmin"></button>
+  <button id="bSet">⚙️</button>
+  <select id="lang"><option value="pt">Português</option><option value="ja">日本語</option></select>
+</header>
+<div id="demo" class="demo" style="display:none"></div>
+<main id="app"></main>
+<div id="layer"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+ * i18n  — [português, 日本語]
+ * =================================================================== */
+const I={
+title:["Controle de Imóveis","物件管理"],
+admin:["Cadastro","登録・編集"],
+people:["Moradores","入居者"],
+demo:["Modo demonstração (dados só neste navegador). Configure ⚙️ para conectar ao Google Sheets.","デモモード(このブラウザ内のみ保存)。⚙️でGoogleスプレッドシートに接続してください。"],
+buildings:["Imóveis","物件一覧"],
+search:["Buscar imóvel ou endereço…","物件名・住所で検索…"],
+searchP:["Buscar morador…","入居者を検索…"],
+onlyVac:["Só com vagos","空室ありのみ"],
+units:["apartamentos","部屋"],
+unitsT:["Apartamentos","部屋"],
+vacant:["Vago","空室"],occupied:["Ocupado","入居中"],reserved:["Entrada prevista","入居予定"],
+leavingOn:["Saída em","退去予定"],
+tVac:["Vagos","空室"],tOcc:["Ocupados","入居中"],tRes:["Entradas previstas","入居予定"],tLeave:["Saídas em 30 dias","30日以内に退去"],tAll:["Apartamentos","総部屋数"],
+all:["Todos","すべて"],back:["Voltar","戻る"],
+address:["Endereço","住所"],rent:["Aluguel","賃料"],perMonth:["/mês","/月"],
+layout:["Tipo (madori)","間取り"],area:["Área (m²)","面積(㎡)"],
+parking:["Estacionamento","駐車場"],parkingYes:["Com vaga","駐車場あり"],parkingNo:["Sem vaga","駐車場なし"],
+bike:["Fábrica de bicicleta","自転車工場まで"],min:["min","分"],
+contract:["Contrato desde","契約開始日"],facilities:["Utensílios fornecidos","設備・備品"],
+aircon:["Ar-condicionado","エアコン"],fridge:["Geladeira","冷蔵庫"],washer:["Máq. de lavar","洗濯機"],
+stove:["Fogão","コンロ"],riceCooker:["Panela de arroz","炊飯器"],microwave:["Micro-ondas","電子レンジ"],
+photos:["Fotos","写真"],exterior:["Foto externa","外観写真"],floorPlan:["Planta do apartamento","間取り図"],
+extraPhotos:["Outras fotos (máx. 5)","その他の写真(最大5枚)"],
+current:["Morador atual","現在の入居者"],housemates:["Coabitantes","同居人"],
+moveIn:["Entrada","入居日"],moveOut:["Saída","退去日"],
+history:["Histórico de moradores","入居履歴"],noHistory:["Sem histórico.","履歴なし。"],
+checkin:["Registrar entrada","入居登録"],checkout:["Registrar saída","退去登録"],
+tenant:["Morador titular","契約者"],tenantJa:["Nome em japonês","氏名(日本語)"],tenantRo:["Nome em romaji","氏名(ローマ字)"],
+addHm:["+ Coabitante","+ 同居人を追加"],roleT:["Titular","契約者"],roleH:["Coabitante","同居人"],role:["Tipo","区分"],
+memo:["Observações","備考"],
+save:["Salvar","保存"],cancel:["Cancelar","キャンセル"],del:["Excluir","削除"],edit:["Editar","編集"],
+saved:["Salvo!","保存しました"],err:["Erro: ","エラー: "],
+confirmDel:["Excluir? Não pode ser desfeito.","削除しますか?元に戻せません。"],
+delGuard:["Não é possível excluir: há histórico registrado.","履歴があるため削除できません。"],
+delGuardB:["Remova primeiro os apartamentos deste imóvel.","先にこの物件の部屋を削除してください。"],
+newBuilding:["+ Novo imóvel","+ 物件を追加"],newUnits:["+ Apartamentos","+ 部屋を追加"],
+bName:["Nome do imóvel (japonês)","物件名(日本語)"],bNamePt:["Nome em romaji","ローマ字名"],
+addressRo:["Endereço em romaji","住所(ローマ字)"],
+numbers:["Números dos apartamentos (ex: 101, 102, 201)","部屋番号(例: 101, 102, 201)"],unitNo:["Nº do apartamento","号室"],
+spots:["Vagas / observação","駐車場の台数・備考"],
+setTitle:["Conexão Google Sheets","Googleスプレッドシート接続"],setUrl:["URL do Web App (Apps Script)","Web App URL (Apps Script)"],setTok:["Senha / token","パスワード / トークン"],
+loading:["Carregando…","読み込み中…"],uploading:["Enviando…","送信中…"],noUnits:["Nenhum apartamento cadastrado.","部屋が未登録です。"],
+unknownName:["(nome não registrado)","(氏名不明)"],
+occWarn:["O apartamento está ocupado. Registrar a saída dos moradores atuais na data de entrada e continuar?","現在入居者がいます。入居日付で現入居者の退去を登録して続けますか?"],
+selectOut:["Quem está saindo?","退去する人"],
+doInspIn:["Fazer a vistoria de entrada agora","続けて入居時の検査を記録する"],
+doInspOut:["Fazer a vistoria de saída agora","続けて退去時の検査を記録する"],
+/* vistoria */
+inspection:["Vistoria","検査"],inspections:["Vistorias","検査履歴"],newInsp:["Registrar vistoria","検査を記録"],
+inspDate:["Data da vistoria","検査日"],inspType:["Tipo de vistoria","検査の種類"],
+tIn:["Entrada","入居時"],tOut:["Saída","退去時"],tPer:["Periódica","定期"],
+inspector:["Responsável pela vistoria","検査者"],inspWho:["Morador relacionado","対象の入居者"],
+sectApp:["Eletrodomésticos e equipamentos","家電・設備"],sectGen:["Condições do apartamento","部屋の状態"],
+lights:["Iluminação (luzes)","照明"],cleaning:["Limpeza","清掃"],trash:["Lixo / objetos deixados","ゴミ・残置物"],walls:["Paredes e papel de parede","壁・クロス"],
+okLbl:["OK","OK"],ngLbl:["Problema","不具合"],
+okCleaning:["Limpo","清掃済み"],ngCleaning:["Precisa de limpeza","要清掃"],
+okTrash:["Sem lixo","なし"],ngTrash:["Deixou lixo","ゴミあり"],
+okWalls:["Sem avarias","異常なし"],ngWalls:["Com avarias","傷・汚れあり"],
+detail:["Descreva o problema","内容を記入"],
+other:["Outros problemas","その他の問題"],otherPh:["Ex.: torneira pingando, porta com defeito…","例:水漏れ、ドアの不具合…"],
+okAll:["Marcar tudo que falta como OK","未選択をすべてOKにする"],
+notChecked:["Itens não verificados: ","未確認の項目: "],saveAnyway:["Salvar assim mesmo?","このまま保存しますか?"],
+noIssues:["Sem problemas","問題なし"],issuesN:["problema(s)","件の問題"],
+noInsp:["Nenhuma vistoria registrada.","検査記録なし。"],
+notProvided:["Não fornecido neste apartamento: ","備付なし: "],
+/* moradores */
+stays:["Moradias","入居履歴"],since:["desde","から"],now:["atual","現在"],
+residence:["Mora em","現在の部屋"],nStays:["moradia(s)","件の入居"],
+editPerson:["Editar morador","入居者を編集"],
+backup:["Baixar backup (JSON)","バックアップ(JSON)"],
+markOwn:["Instalado no apto","備付(設置済み)"],markCo:["Da empreiteira","会社所有"],markNo:["Não tem (morador tem o seu)","なし(入居者所有)"],markUnk:["Não informado","未入力"],
+markOwnS:["instalado","備付"],markCoS:["empreiteira","会社所有"],
+legend:["〇 já vem instalado no apartamento · ● da empreiteira (propriedade dela) · × não tem (o morador tem o seu)","〇 備付 · ● 会社所有 · × なし(入居者所有)"],
+parkYes:["Com vaga","あり"],parkNo:["Sem vaga","なし"],
+dupWarn:["Já existe um morador com esse nome — o histórico será unido.","同名の入居者が既に存在します。履歴を統合します。"],
+};
+let lang=localStorage.getItem("lang")||"pt";
+const t=k=>{const v=I[k];return v?v[lang==="pt"?0:1]:k};
+const L2=(pt,ja)=>lang==="pt"?pt:ja;
+
+/* =====================================================================
+ * Configuração e camada de dados
+ * =================================================================== */
+// Link de configuração opcional:  index.html?u=<URL>&k=<SENHA>  (guarda e limpa a barra de endereço)
+(function(){try{const q=new URLSearchParams(location.search);if(q.get("u")){localStorage.setItem("api_url",q.get("u"));if(q.get("k")!==null)localStorage.setItem("api_tok",q.get("k"));history.replaceState(null,"",location.pathname+location.hash)}}catch(e){}})();
+const cfg=()=>({url:localStorage.getItem("api_url")||"",tok:localStorage.getItem("api_tok")||""});
+const isDemo=()=>!cfg().url;
+const LS="imoveis_demo_v2";
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const TABLES=["buildings","units","persons","stays","inspections"];
+const Store={
+ async post(action,payload){
+  const c=cfg();
+  const r=await fetch(c.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,token:c.tok,...payload})});
+  const j=await r.json();if(j.error)throw new Error(j.error);return j;
+ },
+ async all(){
+  if(isDemo()){let d=JSON.parse(localStorage.getItem(LS)||"null");if(!d){d=demoData();localStorage.setItem(LS,JSON.stringify(d))}return d}
+  return this.post("all",{});
+ },
+ async upsert(table,row){
+  if(isDemo()){const d=JSON.parse(localStorage.getItem(LS));const a=d[table]=d[table]||[];const i=a.findIndex(x=>x.id===row.id);i>=0?a[i]=row:a.push(row);localStorage.setItem(LS,JSON.stringify(d));return}
+  await this.post("upsert",{table,row});
+ },
+ async remove(table,id){
+  if(isDemo()){const d=JSON.parse(localStorage.getItem(LS));d[table]=(d[table]||[]).filter(x=>x.id!==id);localStorage.setItem(LS,JSON.stringify(d));return}
+  await this.post("remove",{table,id});
+ },
+ async upload(dataUrl,folder){
+  if(isDemo())return dataUrl;
+  return (await this.post("upload",{dataUrl,folder})).url;
+ }
+};
+function demoData(){
+ const d=new Date(),iso=x=>x.toISOString().slice(0,10),ago=n=>iso(new Date(d.getTime()-n*864e5));
+ return{
+ buildings:[
+  {id:"b1",name:"グリーンメゾンダコタ",namePt:"Green Maison Dakota",address:"愛知県稲沢市緑町1丁目8",addressRo:"Aichi-ken Inazawa-shi Midori-cho 1-chome 8",parking:"2台",bikeMin:"10",exterior:"",memo:""},
+  {id:"b2",name:"ルミナス三条A",namePt:"Luminous Sanjo A",address:"愛知県稲沢市東緑町1丁目36-1",addressRo:"Aichi-ken Inazawa-shi Higashimidori-cho 1-chome 36-1",parking:"",bikeMin:"15",exterior:"",memo:""}],
+ units:[
+  {id:"u1",buildingId:"b1",number:"101",layout:"2DK",area:"40",contractStart:"2024-07-03",rent:43020,aircon:"〇",fridge:"●",washer:"●",stove:"〇",riceCooker:"",microwave:"",parking:"〇",floorPlan:"",photos:[],notes:""},
+  {id:"u2",buildingId:"b1",number:"103",layout:"2DK",area:"40",contractStart:"2023-03-27",rent:42000,aircon:"〇",fridge:"●",washer:"●",stove:"〇",riceCooker:"",microwave:"",parking:"",floorPlan:"",photos:[],notes:""},
+  {id:"u3",buildingId:"b2",number:"102",layout:"1LDK",area:"",contractStart:"2026-06-02",rent:55230,aircon:"×",fridge:"×",washer:"×",stove:"×",riceCooker:"",microwave:"",parking:"",floorPlan:"",photos:[],notes:""}],
+ persons:[
+  {id:"p1",nameJa:"リベラ エリック",nameRo:"Rivera Erick",memo:""},
+  {id:"p2",nameJa:"坂本 エジソン",nameRo:"Sakamoto Edison",memo:""}],
+ stays:[
+  {id:"s1",unitId:"u1",personId:"p2",role:"契約者",moveIn:"2022-01-10",moveOut:"2024-08-31",memo:""},
+  {id:"s2",unitId:"u1",personId:"p1",role:"契約者",moveIn:"2024-09-01",moveOut:"",memo:""}],
+ inspections:[
+  {id:"i1",unitId:"u1",date:ago(400),type:"入居時",personId:"p1",inspector:"Demo",aircon:"OK",fridge:"OK",washer:"NG: ruído alto",stove:"OK",riceCooker:"-",microwave:"-",lights:"OK",cleaning:"OK",trash:"OK",walls:"NG: risco na parede da sala",other:"",notes:""}]};
+}
+
+/* =====================================================================
+ * Estado e helpers
+ * =================================================================== */
+let D={buildings:[],units:[],persons:[],stays:[],inspections:[]};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const yen=n=>n?("¥"+Number(n).toLocaleString("ja-JP")):"—";
+const fmt=d=>d?d:"—";
+const toast=m=>{const e=document.createElement("div");e.className="toast";e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2600)};
+const list=v=>Array.isArray(v)?v:(typeof v==="string"&&v?v.split("\n").filter(Boolean):[]);
+// Marcas: 〇 instalado no apto · ● da empreiteira · × não tem · vazio = não informado
+const mk=v=>{v=String(v??"").trim();if(!v)return"";if(/^●/.test(v))return"●";if(/^(〇|○|◯|有|1|true|yes|sim)/i.test(v))return"〇";return"×"};
+const has=v=>{const m=mk(v);return m==="〇"||m==="●"};
+// Madori e área: ignora valores que o Sheets converteu em data por engano
+const okLay=v=>{v=String(v??"").trim();return/^\d{4}-\d\d-\d\d/.test(v)?"":v};
+const okArea=v=>{v=String(v??"").trim().replace(",",".");return/^\d+(\.\d+)?$/.test(v)?v:""};
+const thumb=(u,w)=>!u||u.startsWith("data:")?u:u.replace(/sz=w\d+/,"sz=w"+w);
+const img=(u,w,extra="")=>u?`<img loading="lazy" src="${esc(thumb(u,w))}" ${extra}>`:"";
+const TYPES=[["入居時","tIn"],["退去時","tOut"],["定期","tPer"]];
+const ROLE_T="契約者",ROLE_H="同居人";
+const bById=id=>D.buildings.find(b=>b.id===id);
+const uById=id=>D.units.find(u=>u.id===id);
+const pById=id=>D.persons.find(p=>p.id===id);
+const bName=b=>b?(lang==="pt"&&b.namePt?`${b.namePt} (${b.name})`:b.name):"";
+const bShort=b=>b?(lang==="pt"&&b.namePt?b.namePt:b.name):"";
+const pName=p=>{if(!p)return t("unknownName");return lang==="ja"?(p.nameJa||p.nameRo):(p.nameRo?p.nameRo+(p.nameJa?` (${p.nameJa})`:""):p.nameJa)};
+const unitsOf=b=>D.units.filter(u=>u.buildingId===b).sort((a,b)=>String(a.number).localeCompare(String(b.number),"ja",{numeric:true}));
+const sk=s=>s.moveIn||s.moveOut||"";
+const staysOf=u=>D.stays.filter(s=>s.unitId===u).sort((a,b)=>sk(b).localeCompare(sk(a)));
+const staysOfP=p=>D.stays.filter(s=>s.personId===p).sort((a,b)=>sk(b).localeCompare(sk(a)));
+const inspOf=u=>D.inspections.filter(i=>i.unitId===u).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+const roleLbl=r=>r===ROLE_H?t("roleH"):t("roleT");
+const typeLbl=v=>{const x=TYPES.find(a=>a[0]===v);return x?t(x[1]):v};
+function status(u){
+ const td=today(),ss=staysOf(u.id);
+ const cur=ss.filter(s=>(!s.moveIn||s.moveIn<=td)&&(!s.moveOut||s.moveOut>=td));
+ const fut=ss.filter(s=>s.moveIn&&s.moveIn>td);
+ const tit=cur.find(s=>s.role!==ROLE_H)||cur[0];
+ const leaving=tit&&tit.moveOut?tit.moveOut:"";
+ return{code:cur.length?"occ":fut.length?"res":"vac",cur,fut,tit,leaving};
+}
+function dur(a,b){
+ if(!a)return"";const d=Math.round(((b?new Date(b):new Date())-new Date(a))/864e5);if(!(d>=0))return"";
+ const m=Math.floor(d/30.44);
+ if(m>=12)return Math.floor(m/12)+L2(" a ","年")+(m%12)+L2(" m","ヶ月");
+ return m>=1?m+L2(" m","ヶ月"):d+L2(" d","日");
+}
+const encodeItem=it=>it.s==="ok"?"OK":it.s==="ng"?(it.n?"NG: "+it.n:"NG"):it.s==="na"?"-":"";
+function decodeItem(v){v=String(v??"");if(!v)return{s:"",n:""};if(v==="-")return{s:"na",n:""};if(/^NG/i.test(v))return{s:"ng",n:v.replace(/^NG:?\s*/i,"")};return{s:"ok",n:""}}
+const CHK=[
+ {k:"aircon",app:1,ic:"❄️"},{k:"fridge",app:1,ic:"🧊"},{k:"washer",app:1,ic:"🧺"},{k:"stove",app:1,ic:"🔥"},{k:"riceCooker",app:1,ic:"🍚"},{k:"microwave",app:1,ic:"📡"},
+ {k:"lights",ic:"💡"},{k:"cleaning",ic:"🧹",ok:"okCleaning",ng:"ngCleaning"},{k:"trash",ic:"🗑️",ok:"okTrash",ng:"ngTrash"},{k:"walls",ic:"🧱",ok:"okWalls",ng:"ngWalls"}];
+const issuesOf=i=>{const o=[];CHK.forEach(c=>{const d=decodeItem(i[c.k]);if(d.s==="ng")o.push({k:c.k,n:d.n})});if(String(i.other||"").trim())o.push({k:"other",n:i.other});return o};
+
+async function reload(){
+ $("#app").innerHTML=`<p class="mut">${t("loading")}</p>`;
+ try{D=await Store.all();TABLES.forEach(k=>D[k]=D[k]||[])}catch(e){$("#app").innerHTML=`<p>${t("err")}${esc(e.message)}</p>`;return}
+ render();
+}
+function nav(h){if(location.hash==="#"+h)render();else location.hash=h}
+
+/* =====================================================================
+ * Roteamento
+ * =================================================================== */
+function render(){
+ document.documentElement.lang=lang==="pt"?"pt":"ja";
+ $("#ttl").textContent=t("title");$("#bPeople").textContent="👥 "+t("people");$("#bAdmin").textContent="✏️ "+t("admin");
+ $("#lang").value=lang;$("#demo").style.display=isDemo()?"block":"none";$("#demo").textContent=t("demo");
+ const parts=location.hash.replace(/^#\/?/,"").split("/");const [v,a,b]=parts;
+ if(v==="b")rBuilding(a);else if(v==="u")rUnit(a);else if(v==="insp")rInspect(a,b);
+ else if(v==="people")rPeople();else if(v==="p")rPerson(a);else if(v==="admin")rAdmin();else rHome();
+}
+window.addEventListener("hashchange",()=>{render();window.scrollTo(0,0)});
+
+/* =====================================================================
+ * Telas
+ * =================================================================== */
+let HOME={q:"",onlyVac:false},BF="all",PQ="";
+function rHome(){
+ const q=HOME.q.toLowerCase();
+ let bs=D.buildings.filter(b=>(b.name+" "+(b.namePt||"")+" "+(b.address||"")+" "+(b.addressRo||"")).toLowerCase().includes(q));
+ const cnt=bid=>{let v=0,o=0,r=0,n=0;unitsOf(bid).forEach(u=>{n++;const c=status(u).code;c==="vac"?v++:c==="occ"?o++:r++});return{n,v,o,r}};
+ if(HOME.onlyVac)bs=bs.filter(b=>cnt(b.id).v>0);
+ let T={n:0,v:0,o:0,r:0,l:0};const lim=new Date(Date.now()+30*864e5).toISOString().slice(0,10);
+ D.units.forEach(u=>{const s=status(u);T.n++;s.code==="vac"?T.v++:s.code==="occ"?T.o++:T.r++;if(s.leaving&&s.leaving<=lim)T.l++});
+ $("#app").innerHTML=`
+ <div class="tiles">
+  <div class="tile"><b>${T.n}</b><span>${t("tAll")}</span></div>
+  <div class="tile"><b style="color:var(--ok)">${T.v}</b><span>${t("tVac")}</span></div>
+  <div class="tile"><b style="color:var(--bad)">${T.o}</b><span>${t("tOcc")}</span></div>
+  <div class="tile"><b style="color:var(--warn)">${T.r}</b><span>${t("tRes")}</span></div>
+  <div class="tile"><b style="color:var(--warn)">${T.l}</b><span>${t("tLeave")}</span></div></div>
+ <div class="bar"><input class="grow" id="q" placeholder="${t("search")}" value="${esc(HOME.q)}">
+ <label class="mut"><input type="checkbox" id="ov" ${HOME.onlyVac?"checked":""} style="width:auto"> ${t("onlyVac")}</label></div>
+ <div class="grid">${bs.map(b=>{const c=cnt(b.id);return`
+ <a class="card" href="#/b/${b.id}">
+ <div class="ph" ${b.exterior?`style="background-image:url('${esc(thumb(b.exterior,500))}')"`:""}>${b.exterior?"":"🏢"}</div>
+ <div class="pad"><h3>${esc(bName(b))}</h3><div class="mut">${esc(b.address)}</div>
+ <div style="margin-top:6px"><span class="badge b-gray">${c.n} ${t("units")}</span><span class="badge b-vac">${c.v} ${t("vacant")}</span></div>
+ <div class="mut">🚗 ${b.parking?esc(b.parking):"—"} · 🚲 ${b.bikeMin?esc(b.bikeMin)+" "+t("min"):"—"}</div></div></a>`}).join("")}</div>`;
+ $("#q").oninput=e=>{HOME.q=e.target.value;const p=e.target.selectionStart;rHome();const i=$("#q");i.focus();i.setSelectionRange(p,p)};
+ $("#ov").onchange=e=>{HOME.onlyVac=e.target.checked;rHome()};
+}
+const stBadge=s=>s.code==="vac"?`<span class="badge b-vac">${t("vacant")}</span>`:s.code==="occ"?`<span class="badge b-occ">${t("occupied")}</span>`+(s.leaving?`<span class="badge b-res">${t("leavingOn")} ${s.leaving}</span>`:""):`<span class="badge b-res">${t("reserved")} ${s.fut[0].moveIn}</span>`;
+const shortName=p=>{if(!p)return"";const n=lang==="ja"?(p.nameJa||p.nameRo):(p.nameRo||p.nameJa);return n.split(" ").slice(0,2).join(" ")};
+
+function rBuilding(id){
+ const b=bById(id);if(!b)return nav("");
+ const us=unitsOf(b.id).map(u=>({u,s:status(u)}));
+ const shown=us.filter(x=>BF==="all"||x.s.code===BF);
+ $("#app").innerHTML=`
+ <div class="crumb"><a href="#/">← ${t("buildings")}</a></div>
+ <div class="two"><div>
+  ${b.exterior?img(b.exterior,900,`class="big" data-act="lb" data-src="${esc(thumb(b.exterior,1600))}"`):`<div class="ph big" style="aspect-ratio:16/9;cursor:default">🏢</div>`}</div>
+  <div class="card pad"><h2 style="margin:0 0 6px">${esc(bName(b))}</h2>
+   <p>📍 ${esc(b.address)}${b.addressRo?`<br><span class="mut">${esc(b.addressRo)}</span>`:""}</p>
+   <p>🚗 ${t("parking")}: ${b.parking?esc(b.parking):"—"}</p>
+   <p>🚲 ${t("bike")}: ${b.bikeMin?esc(b.bikeMin)+" "+t("min"):"—"}</p>
+   ${b.memo?`<p class="mut">${esc(b.memo)}</p>`:""}</div></div>
+ <h3 class="sec">${t("unitsT")}</h3>
+ <div class="bar"><select id="flt"><option value="all">${t("all")}</option><option value="vac">${t("vacant")}</option><option value="occ">${t("occupied")}</option><option value="res">${t("reserved")}</option></select></div>
+ ${shown.length?`<div class="units">${shown.map(({u,s})=>`<a class="unit" style="background:var(--${s.code==="vac"?"ok":s.code==="occ"?(s.leaving?"warn":"bad"):"warn"})" href="#/u/${u.id}">${esc(u.number)}<small>${s.code==="vac"?t("vacant"):s.code==="occ"?esc(shortName(pById(s.tit.personId))||t("occupied")):t("reserved")}</small></a>`).join("")}</div>`:`<p class="mut">${t("noUnits")}</p>`}`;
+ $("#flt").value=BF;$("#flt").onchange=e=>{BF=e.target.value;rBuilding(id)};
+}
+function facRow(u){
+ const ic={aircon:"❄️",fridge:"🧊",washer:"🧺",stove:"🔥",riceCooker:"🍚",microwave:"📡"};
+ return Object.keys(ic).map(k=>{const m=mk(u[k]);return`<div class="${m==="〇"?"own":m==="●"?"co":m==="×"?"no":"unk"}">${ic[k]} ${t(k)}${m==="●"?`<small>${t("markCoS")}</small>`:m==="〇"?`<small>${t("markOwnS")}</small>`:m===""?" ?":""}</div>`}).join("")+`<div style="grid-column:1/-1;background:none;padding:0" class="mut">${t("legend")}</div>`;
+}
+function inspCard(i,withPerson){
+ const iss=issuesOf(i),p=pById(i.personId);
+ const lab=k=>k==="other"?t("other"):t(k);
+ return`<div class="card pad" style="margin-bottom:8px">
+  <div><b>${fmt(i.date)}</b> <span class="badge b-pri">${esc(typeLbl(i.type))}</span>
+  ${iss.length?`<span class="badge b-bad">${iss.length} ${t("issuesN")}</span>`:`<span class="badge b-ok">${t("noIssues")}</span>`}
+  ${i.unitId&&withPerson?`<a class="mut" href="#/u/${i.unitId}">${esc(bShort(bById((uById(i.unitId)||{}).buildingId)))} ${esc((uById(i.unitId)||{}).number||"")}</a>`:""}</div>
+  <div class="mut">${p?esc(pName(p))+" · ":""}${i.inspector?t("inspector")+": "+esc(i.inspector):""}</div>
+  ${iss.map(x=>`<div class="issue"><b>${lab(x.k)}</b>${x.n?": "+esc(x.n):""}</div>`).join("")}
+  ${i.notes?`<div class="mut" style="margin-top:4px">${esc(i.notes)}</div>`:""}
+  <div class="bar" style="margin:8px 0 0"><a class="btn sm sec" style="padding:5px 9px;border-radius:8px;border:1px solid var(--pri);color:var(--pri);font-size:12px" href="#/insp/${i.unitId}/${i.id}">${t("edit")}</a></div></div>`;
+}
+function rUnit(id){
+ const u=uById(id);if(!u)return nav("");
+ const b=bById(u.buildingId)||{};
+ const s=status(u),hist=staysOf(u.id),insp=inspOf(u.id);
+ const gal=[];if(b.exterior)gal.push({src:b.exterior,cap:t("exterior")});if(u.floorPlan)gal.push({src:u.floorPlan,cap:t("floorPlan")});list(u.photos).forEach(p=>gal.push({src:p,cap:""}));
+ $("#app").innerHTML=`
+ <div class="crumb"><a href="#/">${t("buildings")}</a> › <a href="#/b/${b.id}">${esc(bShort(b))}</a> › ${esc(u.number)}</div>
+ <div class="two"><div>
+  ${gal[0]?img(gal[0].src,900,`id="mainph" class="big" data-act="lb" data-src="${esc(thumb(gal[0].src,1600))}"`):`<div class="ph big" style="aspect-ratio:16/9;cursor:default">🛏️</div>`}
+  <div class="thumbs">${gal.map(g=>`<figure>${img(g.src,200,`data-act="thumb" data-src="${esc(g.src)}"`)}${g.cap?esc(g.cap):""}</figure>`).join("")}</div></div>
+  <div class="card pad">
+   <div>${stBadge(s)}</div>
+   <h2 style="margin:6px 0 2px">${esc(bShort(b))} ${esc(u.number)}${lang==="ja"?"号室":""}</h2>
+   <div class="price">${yen(u.rent)}<span class="mut" style="font-size:14px">${t("perMonth")}</span></div>
+   <table><tr><th>${t("address")}</th><td>${esc(b.address)}${b.addressRo?`<div class="mut">${esc(b.addressRo)}</div>`:""}</td></tr>
+    ${okLay(u.layout)||okArea(u.area)?`<tr><th>${t("layout")}</th><td>${esc(okLay(u.layout))} ${okArea(u.area)?esc(okArea(u.area))+" ㎡":""}</td></tr>`:""}
+    <tr><th>${t("parking")}</th><td>${mk(u.parking)==="×"?"❌ "+t("parkingNo"):has(u.parking)?"✅ "+t("parkingYes"):"—"}${b.parking?" ("+esc(b.parking)+")":""}</td></tr>
+    <tr><th>${t("bike")}</th><td>${b.bikeMin?esc(b.bikeMin)+" "+t("min"):"—"}</td></tr>
+    <tr><th>${t("contract")}</th><td>${fmt(u.contractStart)}</td></tr>
+    ${u.notes?`<tr><th>${t("memo")}</th><td>${esc(u.notes)}</td></tr>`:""}</table>
+   <div class="fac">${facRow(u)}</div>
+   <div class="bar" style="margin-top:12px">
+    <button class="btn" data-act="checkin" data-id="${u.id}">${t("checkin")}</button>
+    ${s.code==="occ"?`<button class="btn red" data-act="checkout" data-id="${u.id}">${t("checkout")}</button>`:""}
+    <a class="btn" style="background:var(--warn);color:#fff;padding:9px 14px;border-radius:8px;font-size:14px" href="#/insp/${u.id}">📋 ${t("newInsp")}</a>
+    <button class="btn sec" data-act="editUnit" data-id="${u.id}">${t("edit")}</button></div>
+  </div></div>
+ ${s.cur.length?`<h3 class="sec">${t("current")}</h3><div class="card pad">${s.cur.map(c=>`<div style="margin-bottom:6px"><a href="#/p/${c.personId}"><b>${esc(pName(pById(c.personId)))}</b></a> <span class="badge ${c.role===ROLE_H?"b-gray":"b-pri"}">${roleLbl(c.role)}</span>
+   <span class="mut">${t("moveIn")}: ${fmt(c.moveIn)}${c.moveOut?" → "+t("moveOut")+": "+c.moveOut:""} ${c.moveIn?"· "+dur(c.moveIn):""}</span></div>`).join("")}</div>`:""}
+ <h3 class="sec">${t("inspections")}</h3>
+ ${insp.length?insp.map(i=>inspCard(i)).join(""):`<p class="mut">${t("noInsp")}</p>`}
+ <h3 class="sec">${t("history")}</h3>
+ <div class="card pad">${hist.length?`<div class="tl">${hist.map(h=>{const isCur=s.cur.includes(h);return`<div class="${isCur?"cur":""}">
+   <a href="#/p/${h.personId}"><b>${esc(pName(pById(h.personId)))}</b></a> <span class="badge ${h.role===ROLE_H?"b-gray":"b-pri"}">${roleLbl(h.role)}</span> ${h.moveIn&&h.moveIn>today()?`<span class="badge b-res">${t("reserved")}</span>`:""}
+   <div class="mut">${t("moveIn")}: ${fmt(h.moveIn)} → ${t("moveOut")}: ${h.moveOut||(isCur?t("now"):"—")} ${h.moveIn?"· "+dur(h.moveIn,h.moveOut):""}</div>
+   ${h.memo?`<div class="mut">${esc(h.memo)}</div>`:""}
+   <button class="btn sm sec" data-act="editStay" data-id="${h.id}">${t("edit")}</button></div>`}).join("")}</div>`:`<span class="mut">${t("noHistory")}</span>`}</div>`;
+}
+
+/* ---------- Pessoas ---------- */
+function rPeople(){
+ const q=PQ.toLowerCase();
+ const ps=D.persons.filter(p=>((p.nameJa||"")+" "+(p.nameRo||"")).toLowerCase().includes(q)).sort((a,b)=>pName(a).localeCompare(pName(b),lang==="ja"?"ja":"pt"));
+ $("#app").innerHTML=`<div class="crumb"><a href="#/">← ${t("buildings")}</a></div>
+ <div class="bar"><input class="grow" id="pq" placeholder="${t("searchP")}" value="${esc(PQ)}"></div>
+ <div class="card">${ps.map(p=>{const ss=staysOfP(p.id),cur=ss.find(s=>(!s.moveIn||s.moveIn<=today())&&(!s.moveOut||s.moveOut>=today()));const u=cur&&uById(cur.unitId);
+  return`<a class="pad" style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);flex-wrap:wrap" href="#/p/${p.id}"><b>${esc(pName(p))}</b>
+  <span class="mut">${u?`🏠 ${esc(bShort(bById(u.buildingId)))} ${esc(u.number)}`:""} · ${ss.length} ${t("nStays")}</span></a>`}).join("")||`<p class="pad mut">—</p>`}</div>`;
+ $("#pq").oninput=e=>{PQ=e.target.value;const p=e.target.selectionStart;rPeople();const i=$("#pq");i.focus();i.setSelectionRange(p,p)};
+}
+function rPerson(id){
+ const p=pById(id);if(!p)return nav("people");
+ const ss=staysOfP(id),ins=D.inspections.filter(i=>i.personId===id).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+ $("#app").innerHTML=`<div class="crumb"><a href="#/people">← ${t("people")}</a></div>
+ <div class="card pad"><h2 style="margin:0">${esc(p.nameJa||p.nameRo)}</h2><div class="mut">${esc(p.nameRo&&p.nameJa?p.nameRo:"")}</div>
+  ${p.memo?`<p>${esc(p.memo)}</p>`:""}
+  <button class="btn sm sec" data-act="editPerson" data-id="${p.id}">${t("editPerson")}</button></div>
+ <h3 class="sec">${t("stays")}</h3>
+ <div class="card pad"><div class="tl">${ss.map(h=>{const u=uById(h.unitId)||{},b=bById(u.buildingId)||{},cur=(!h.moveIn||h.moveIn<=today())&&(!h.moveOut||h.moveOut>=today());return`<div class="${cur?"cur":""}">
+  <a href="#/u/${h.unitId}"><b>${esc(bShort(b))} ${esc(u.number||"")}</b></a> <span class="badge ${h.role===ROLE_H?"b-gray":"b-pri"}">${roleLbl(h.role)}</span>
+  <div class="mut">${t("moveIn")}: ${fmt(h.moveIn)} → ${t("moveOut")}: ${h.moveOut||(cur?t("now"):"—")} ${h.moveIn?"· "+dur(h.moveIn,h.moveOut):""}</div>
+  ${h.memo?`<div class="mut">${esc(h.memo)}</div>`:""}</div>`}).join("")||`<span class="mut">${t("noHistory")}</span>`}</div></div>
+ <h3 class="sec">${t("inspections")}</h3>${ins.length?ins.map(i=>inspCard(i,true)).join(""):`<p class="mut">${t("noInsp")}</p>`}`;
+}
+
+/* ---------- Vistoria (formulário separado) ---------- */
+let INS=null,inspPreset={};
+function rInspect(unitId,insId){
+ const u=uById(unitId);if(!u)return nav("");
+ const b=bById(u.buildingId)||{};
+ const ex=insId&&insId!=="new"?D.inspections.find(x=>x.id===insId):null;
+ if(!INS||INS.unitId!==unitId||INS.insId!==(ex?ex.id:"")){
+  const items={};
+  CHK.forEach(c=>{items[c.k]=ex?decodeItem(ex[c.k]):(c.app&&!has(u[c.k])?{s:"na",n:""}:{s:"",n:""})});
+  const s=status(u);
+  INS={unitId,insId:ex?ex.id:"",date:ex?ex.date:today(),type:ex?ex.type:(inspPreset.type||"定期"),
+   personId:ex?ex.personId:(inspPreset.personId!==undefined?inspPreset.personId:(s.tit?s.tit.personId:"")),
+   inspector:ex?ex.inspector:(localStorage.getItem("inspector")||""),other:ex?ex.other:"",notes:ex?ex.notes:"",items};
+  inspPreset={};
+ }
+ // moradores relacionados a este apartamento (mais recentes primeiro)
+ const seen=new Set(),opts=[];staysOf(unitId).forEach(s=>{if(s.personId&&!seen.has(s.personId)){seen.add(s.personId);opts.push(s.personId)}});
+ if(INS.personId&&!seen.has(INS.personId))opts.push(INS.personId);
+ $("#app").innerHTML=`
+ <div class="crumb"><a href="#/">${t("buildings")}</a> › <a href="#/b/${b.id}">${esc(bShort(b))}</a> › <a href="#/u/${u.id}">${esc(u.number)}</a> › ${t("inspection")}</div>
+ <div class="card pad"><h2 style="margin:0 0 10px">📋 ${t("inspection")} — ${esc(bShort(b))} ${esc(u.number)}</h2>
+  <div class="row2"><div class="f"><label>${t("inspDate")}</label><input type="date" id="i_date" value="${esc(INS.date)}"></div>
+  <div class="f"><label>${t("inspType")}</label><select id="i_type">${TYPES.map(x=>`<option value="${x[0]}" ${INS.type===x[0]?"selected":""}>${t(x[1])}</option>`).join("")}</select></div></div>
+  <div class="row2"><div class="f"><label>${t("inspector")}</label><input id="i_insp" value="${esc(INS.inspector)}"></div>
+  <div class="f"><label>${t("inspWho")}</label><select id="i_who"><option value="">—</option>${opts.map(id=>`<option value="${id}" ${INS.personId===id?"selected":""}>${esc(pName(pById(id)))}</option>`).join("")}</select></div></div></div>
+ <h3 class="sec">${t("sectApp")}</h3><div class="card pad" id="itemsApp"></div>
+ <h3 class="sec">${t("sectGen")}</h3><div class="card pad" id="itemsGen"></div>
+ <h3 class="sec">${t("other")}</h3>
+ <div class="card pad"><textarea id="i_other" rows="3" placeholder="${t("otherPh")}">${esc(INS.other)}</textarea>
+  <div class="f" style="margin-top:8px"><label>${t("memo")}</label><textarea id="i_notes" rows="2">${esc(INS.notes)}</textarea></div></div>
+ <div class="sticky-save"><button class="btn" id="i_save">${t("save")}</button><button class="btn sec" id="i_all">${t("okAll")}</button><a class="btn sec" style="padding:9px 14px;border-radius:8px;border:1px solid var(--pri);color:var(--pri);font-size:14px" href="#/u/${u.id}" id="i_cancel">${t("cancel")}</a>
+  ${insId&&ex?`<button class="btn red" id="i_del">${t("del")}</button>`:""}</div>`;
+ drawItems(u);
+ const bind=(id,k)=>$("#"+id).addEventListener("input",e=>INS[k]=e.target.value);
+ bind("i_date","date");bind("i_type","type");bind("i_insp","inspector");bind("i_who","personId");bind("i_other","other");bind("i_notes","notes");
+ $("#i_all").onclick=()=>{CHK.forEach(c=>{if(!INS.items[c.k].s)INS.items[c.k].s="ok"});drawItems(u)};
+ $("#i_cancel").onclick=()=>{INS=null};
+ if($("#i_del"))$("#i_del").onclick=async()=>{if(confirm(t("confirmDel"))){await Store.remove("inspections",INS.insId);INS=null;toast(t("saved"));await reloadThen("u/"+unitId)}};
+ $("#i_save").onclick=async()=>{
+  const miss=CHK.filter(c=>!INS.items[c.k].s).length;
+  if(miss&&!confirm(t("notChecked")+miss+"\n"+t("saveAnyway")))return;
+  const row={id:INS.insId||uid(),unitId,date:INS.date||today(),type:INS.type,personId:INS.personId,inspector:INS.inspector.trim(),other:INS.other.trim(),notes:INS.notes.trim()};
+  CHK.forEach(c=>row[c.k]=encodeItem(INS.items[c.k]));
+  const btn=$("#i_save");btn.disabled=true;btn.textContent=t("uploading");
+  try{await Store.upsert("inspections",row);localStorage.setItem("inspector",row.inspector);INS=null;toast(t("saved"));await reloadThen("u/"+unitId)}
+  catch(e){alert(t("err")+e.message);btn.disabled=false;btn.textContent=t("save")}
+ };
+}
+async function reloadThen(h){try{D=await Store.all();TABLES.forEach(k=>D[k]=D[k]||[])}catch(e){}nav(h)}
+function drawItems(u){
+ const row=c=>{
+  const it=INS.items[c.k];
+  const okT=c.ok?t(c.ok):t("okLbl"),ngT=c.ng?t(c.ng):t("ngLbl");
+  return`<div class="chkrow"><div class="nm">${c.ic} ${t(c.k)}${c.app&&mk(u[c.k])==="●"?` <span class="badge b-pri" style="font-size:10px">${t("markCoS")}</span>`:""}</div>
+   <div class="seg"><button data-k="${c.k}" data-s="ok" class="${it.s==="ok"?"on-ok":""}">✔ ${okT}</button><button data-k="${c.k}" data-s="ng" class="${it.s==="ng"?"on-ng":""}">✖ ${ngT}</button></div>
+   ${it.s==="ng"?`<input class="ngtxt" data-n="${c.k}" placeholder="${t("detail")}" value="${esc(it.n)}">`:""}</div>`};
+ const app=CHK.filter(c=>c.app&&INS.items[c.k].s!=="na"),na=CHK.filter(c=>c.app&&INS.items[c.k].s==="na");
+ $("#itemsApp").innerHTML=(app.map(row).join("")||"")+(na.length?`<div class="mut" style="margin-top:8px">${t("notProvided")}${na.map(c=>t(c.k)).join(", ")}</div>`:"");
+ $("#itemsGen").innerHTML=CHK.filter(c=>!c.app).map(row).join("");
+ document.querySelectorAll(".seg button").forEach(bt=>bt.onclick=()=>{const it=INS.items[bt.dataset.k];it.s=it.s===bt.dataset.s?"":bt.dataset.s;drawItems(u)});
+ document.querySelectorAll("input[data-n]").forEach(i=>i.oninput=e=>INS.items[i.dataset.n].n=e.target.value);
+}
+
+/* ---------- Cadastro ---------- */
+function rAdmin(){
+ $("#app").innerHTML=`<div class="crumb"><a href="#/">← ${t("buildings")}</a></div>
+ <div class="bar"><button class="btn" data-act="editBld" data-id="">${t("newBuilding")}</button><button class="btn sec" data-act="backup">💾 ${t("backup")}</button></div>
+ ${D.buildings.map(b=>`<div class="card pad" style="margin-bottom:10px"><b>${esc(bName(b))}</b> <span class="mut">${esc(b.address)}</span>
+  <div class="bar" style="margin:8px 0 0"><button class="btn sm sec" data-act="editBld" data-id="${b.id}">${t("edit")}</button>
+  <button class="btn sm" data-act="addUnits" data-id="${b.id}">${t("newUnits")}</button>
+  <button class="btn sm red" data-act="delBld" data-id="${b.id}">${t("del")}</button></div></div>`).join("")}`;
+}
+
+/* =====================================================================
+ * Modais e formulários
+ * =================================================================== */
+function modal(html){$("#layer").innerHTML=`<div class="modal"><div class="box">${html}</div></div>`}
+const closeModal=()=>$("#layer").innerHTML="";
+const fld=(id,label,val="",type="text",extra="")=>`<div class="f"><label>${label}</label><input id="${id}" type="${type}" value="${esc(val)}" ${extra}></div>`;
+const btns=(del)=>`<div class="bar"><button class="btn" id="ok">${t("save")}</button><button class="btn sec" id="no">${t("cancel")}</button>${del?`<button class="btn red" id="dl">${t("del")}</button>`:""}</div>`;
+const pending={};
+const photoFld=(id,label,max)=>`<div class="f"><label>${label}</label><input id="${id}" type="file" accept="image/*" ${max>1?"multiple":""}><div class="imgs" id="${id}_pv"></div></div>`;
+function bindPhoto(id,existing,max){
+ pending[id]=list(existing).slice();const pv=$("#"+id+"_pv");
+ const draw=()=>{pv.innerHTML=pending[id].map((p,i)=>`<span style="position:relative"><img src="${esc(thumb(p,300))}"><button type="button" data-x="${i}" style="position:absolute;top:0;right:0;border:0;background:#c0392b;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer">×</button></span>`).join("")};
+ draw();
+ pv.onclick=e=>{const i=e.target.dataset.x;if(i!==undefined){pending[id].splice(+i,1);draw()}};
+ $("#"+id).onchange=async e=>{for(const f of e.target.files){if(max===1)pending[id]=[];else if(pending[id].length>=max)break;pending[id].push(await shrink(f))}e.target.value="";draw()};
+}
+// Fotos leves: máx. 1000 px, JPEG 70 %
+function shrink(file,max=1000,q=.7){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",q))};im.src=r.result};r.readAsDataURL(file)})}
+async function finalizePhotos(id,folder){const out=[];for(const p of pending[id])out.push(p.startsWith("data:")?await Store.upload(p,folder):p);return out}
+async function guarded(fn,after){
+ const btn=document.querySelector(".modal #ok");if(btn){btn.disabled=true;btn.textContent=t("uploading")}
+ try{await fn();closeModal();toast(t("saved"));await reload();if(after)after()}
+ catch(e){if(!e.silent)alert(t("err")+e.message);if(btn){btn.disabled=false;btn.textContent=t("save")}}
+}
+const silent=()=>{const e=new Error("cancel");e.silent=true;return e};
+
+function formBld(id){
+ const b=bById(id)||{};
+ modal(`<h2>${id?t("edit"):t("newBuilding")}</h2>
+  ${fld("f_name",t("bName"),b.name)}${fld("f_namePt",t("bNamePt"),b.namePt)}${fld("f_addr",t("address"),b.address)}${fld("f_addrRo",t("addressRo"),b.addressRo)}
+  <div class="row2">${fld("f_park",t("spots"),b.parking)}${fld("f_bike",t("bike")+" ("+t("min")+")",b.bikeMin,"number")}</div>
+  ${fld("f_memo",t("memo"),b.memo)}${photoFld("f_ph",t("exterior"),1)}${btns()}`);
+ bindPhoto("f_ph",b.exterior,1);$("#no").onclick=closeModal;
+ $("#ok").onclick=()=>guarded(async()=>{
+  if(!$("#f_name").value.trim())throw new Error(t("bName"));
+  const row={id:b.id||uid(),name:$("#f_name").value.trim(),namePt:$("#f_namePt").value.trim(),address:$("#f_addr").value.trim(),addressRo:$("#f_addrRo").value.trim(),parking:$("#f_park").value.trim(),bikeMin:$("#f_bike").value,exterior:(await finalizePhotos("f_ph","exterior"))[0]||"",memo:$("#f_memo").value.trim()};
+  await Store.upsert("buildings",row)});
+}
+function formUnit(id){
+ const u=uById(id);if(!u)return;
+ const opt=(k,o)=>`<option value="${o[0]}" ${mk(u[k])===o[0]?"selected":""}>${o[1]}</option>`;
+ const MK=[["",  "— "+t("markUnk")],["〇","〇 "+t("markOwn")],["●","● "+t("markCo")],["×","× "+t("markNo")]];
+ const sel=k=>`<div class="f"><label>${t(k)}</label><select id="c_${k}">${MK.map(o=>opt(k,o)).join("")}</select></div>`;
+ modal(`<h2>${t("edit")} ${esc(u.number)}</h2>
+  <div class="row2">${fld("f_no",t("unitNo"),u.number)}${fld("f_rent",t("rent")+" (¥)",u.rent,"number")}</div>
+  <div class="row2">${fld("f_lay",t("layout"),okLay(u.layout))}${fld("f_area",t("area"),okArea(u.area),"number","step=any")}</div>
+  ${fld("f_cs",t("contract"),u.contractStart,"date")}
+  <div class="f"><label><b>${t("facilities")}</b></label><div class="fgrid">${["aircon","fridge","washer","stove","riceCooker","microwave"].map(sel).join("")}</div><div class="mut">${t("legend")}</div></div>
+  <div class="f"><label>${t("parking")}</label><select id="c_parking"><option value="">— ${t("markUnk")}</option><option value="〇" ${mk(u.parking)==="〇"||mk(u.parking)==="●"?"selected":""}>〇 ${t("parkYes")}</option><option value="×" ${mk(u.parking)==="×"?"selected":""}>× ${t("parkNo")}</option></select></div>
+  ${fld("f_notes",t("memo"),u.notes)}
+  ${photoFld("f_fp",t("floorPlan"),1)}${photoFld("f_ph",t("extraPhotos"),5)}${btns(true)}`);
+ bindPhoto("f_fp",u.floorPlan,1);bindPhoto("f_ph",u.photos,5);$("#no").onclick=closeModal;
+ $("#dl").onclick=async()=>{
+  if(D.stays.some(s=>s.unitId===u.id)||D.inspections.some(i=>i.unitId===u.id))return alert(t("delGuard"));
+  if(confirm(t("confirmDel"))){await Store.remove("units",u.id);closeModal();await reload();nav("b/"+u.buildingId)}};
+ $("#ok").onclick=()=>guarded(async()=>{
+  const row={...u,number:$("#f_no").value.trim(),rent:+$("#f_rent").value||"",layout:$("#f_lay").value.trim(),area:$("#f_area").value,contractStart:$("#f_cs").value,notes:$("#f_notes").value,
+   floorPlan:(await finalizePhotos("f_fp","floorplan"))[0]||"",photos:await finalizePhotos("f_ph","photos")};
+  ["aircon","fridge","washer","stove","riceCooker","microwave","parking"].forEach(k=>row[k]=$("#c_"+k).value);
+  if(!row.number)throw new Error(t("unitNo"));
+  await Store.upsert("units",row)});
+}
+function formAddUnits(bid){
+ modal(`<h2>${t("newUnits")}</h2>${fld("f_nums",t("numbers"))}${btns()}`);
+ $("#no").onclick=closeModal;
+ $("#ok").onclick=()=>guarded(async()=>{
+  const nums=$("#f_nums").value.split(/[,\s、]+/).filter(Boolean);
+  for(const n of nums)await Store.upsert("units",{id:uid(),buildingId:bid,number:n,layout:"",area:"",contractStart:"",rent:"",aircon:"",fridge:"",washer:"",stove:"",riceCooker:"",microwave:"",parking:"",floorPlan:"",photos:[],notes:""})});
+}
+/* Pessoa: reaproveita se já existir (mantém o histórico entre apartamentos) */
+function findPerson(ja,ro){
+ const n=s=>String(s||"").replace(/\s+/g,"").toLowerCase();
+ return D.persons.find(p=>(ja&&n(p.nameJa)===n(ja))||(ro&&n(p.nameRo)===n(ro)));
+}
+async function ensurePerson(ja,ro){
+ ja=ja.trim();ro=ro.trim();if(!ja&&!ro)return"";
+ const f=findPerson(ja,ro);
+ if(f){if((ja&&!f.nameJa)||(ro&&!f.nameRo)){await Store.upsert("persons",{...f,nameJa:f.nameJa||ja,nameRo:f.nameRo||ro})}return f.id}
+ const p={id:uid(),nameJa:ja,nameRo:ro,memo:""};await Store.upsert("persons",p);D.persons.push(p);return p.id;
+}
+const personInputs=(pf,withRemove)=>`<div class="row2 hm-row">${`<input list="dl_ja" class="p_ja" placeholder="${t("tenantJa")}">`}${`<input list="dl_ro" class="p_ro" placeholder="${t("tenantRo")}">`}</div>`;
+function datalists(){return`<datalist id="dl_ja">${D.persons.filter(p=>p.nameJa).map(p=>`<option value="${esc(p.nameJa)}">${esc(p.nameRo)}</option>`).join("")}</datalist><datalist id="dl_ro">${D.persons.filter(p=>p.nameRo).map(p=>`<option value="${esc(p.nameRo)}">${esc(p.nameJa)}</option>`).join("")}</datalist>`}
+function autofill(root){
+ root.addEventListener("change",e=>{
+  const row=e.target.closest(".hm-row");if(!row)return;
+  const ja=row.querySelector(".p_ja"),ro=row.querySelector(".p_ro");
+  const f=findPerson(ja.value,ro.value);if(f){if(!ja.value)ja.value=f.nameJa||"";if(!ro.value)ro.value=f.nameRo||""}
+ });
+}
+function formCheckin(unitId){
+ const u=uById(unitId),s=status(u);
+ modal(`<h2>${t("checkin")} — ${esc(u.number)}</h2>${datalists()}
+  <div class="f"><label>${t("tenant")}</label><div class="row2 hm-row" id="tit"><input list="dl_ja" class="p_ja" placeholder="${t("tenantJa")}"><input list="dl_ro" class="p_ro" placeholder="${t("tenantRo")}"></div></div>
+  ${fld("f_in",t("moveIn"),today(),"date")}
+  <div class="f"><label>${t("housemates")}</label><div id="hms"></div><button type="button" class="btn sm sec" id="addhm">${t("addHm")}</button></div>
+  ${fld("f_memo",t("memo"))}
+  <div class="chk f"><label><input type="checkbox" id="f_insp" checked> ${t("doInspIn")}</label></div>${btns()}`);
+ autofill($("#layer"));
+ $("#addhm").onclick=()=>{const d=document.createElement("div");d.className="row2 hm-row";d.style.marginBottom="6px";d.innerHTML=`<input list="dl_ja" class="p_ja" placeholder="${t("tenantJa")}"><input list="dl_ro" class="p_ro" placeholder="${t("tenantRo")}">`;$("#hms").appendChild(d)};
+ $("#no").onclick=closeModal;
+ let go=null;
+ $("#ok").onclick=()=>guarded(async()=>{
+  const ja=$("#tit .p_ja").value,ro=$("#tit .p_ro").value;
+  if(!ja.trim()&&!ro.trim())throw new Error(t("tenant"));
+  const inD=$("#f_in").value||today();
+  if(s.code==="occ"){if(!confirm(t("occWarn")))throw silent();
+   for(const c of s.cur)if(!c.moveOut||c.moveOut>inD)await Store.upsert("stays",{...c,moveOut:inD})}
+  const pid=await ensurePerson(ja,ro);
+  await Store.upsert("stays",{id:uid(),unitId,personId:pid,role:ROLE_T,moveIn:inD,moveOut:"",memo:$("#f_memo").value.trim()});
+  for(const r of document.querySelectorAll("#hms .hm-row")){
+   const hj=r.querySelector(".p_ja").value,hr=r.querySelector(".p_ro").value;
+   if(hj.trim()||hr.trim())await Store.upsert("stays",{id:uid(),unitId,personId:await ensurePerson(hj,hr),role:ROLE_H,moveIn:inD,moveOut:"",memo:""})}
+  go=$("#f_insp").checked?{type:"入居時",personId:pid}:null;
+ },()=>{if(go){inspPreset=go;INS=null;nav("insp/"+unitId+"/new")}});
+}
+function formCheckout(unitId){
+ const u=uById(unitId),s=status(u);
+ modal(`<h2>${t("checkout")} — ${esc(u.number)}</h2>
+  <div class="f"><label>${t("selectOut")}</label><div class="chk" style="flex-direction:column">${s.cur.map(c=>`<label><input type="checkbox" class="co" value="${c.id}" checked> ${esc(pName(pById(c.personId)))} <span class="mut">(${roleLbl(c.role)})</span></label>`).join("")}</div></div>
+  ${fld("f_out",t("moveOut"),today(),"date")}${fld("f_memo",t("memo"))}
+  <div class="chk f"><label><input type="checkbox" id="f_insp" checked> ${t("doInspOut")}</label></div>${btns()}`);
+ $("#no").onclick=closeModal;
+ let go=null;
+ $("#ok").onclick=()=>guarded(async()=>{
+  const ids=[...document.querySelectorAll(".co:checked")].map(x=>x.value);if(!ids.length)throw new Error(t("selectOut"));
+  const out=$("#f_out").value||today(),memo=$("#f_memo").value.trim();
+  for(const sid of ids){const st=D.stays.find(x=>x.id===sid);await Store.upsert("stays",{...st,moveOut:out,memo:[st.memo,memo].filter(Boolean).join(" / ")})}
+  const first=D.stays.find(x=>x.id===ids[0]);
+  go=$("#f_insp").checked?{type:"退去時",personId:first.personId}:null;
+ },()=>{if(go){inspPreset=go;INS=null;nav("insp/"+unitId+"/new")}});
+}
+function formStay(sid){
+ const s=D.stays.find(x=>x.id===sid),p=pById(s.personId)||{};
+ modal(`<h2>${t("edit")}</h2>${datalists()}
+  <div class="f"><div class="row2 hm-row"><input list="dl_ja" class="p_ja" value="${esc(p.nameJa)}" placeholder="${t("tenantJa")}"><input list="dl_ro" class="p_ro" value="${esc(p.nameRo)}" placeholder="${t("tenantRo")}"></div></div>
+  <div class="f"><label>${t("role")}</label><select id="f_role"><option value="${ROLE_T}" ${s.role!==ROLE_H?"selected":""}>${t("roleT")}</option><option value="${ROLE_H}" ${s.role===ROLE_H?"selected":""}>${t("roleH")}</option></select></div>
+  <div class="row2">${fld("f_in",t("moveIn"),s.moveIn,"date")}${fld("f_out",t("moveOut"),s.moveOut,"date")}</div>${fld("f_memo",t("memo"),s.memo)}${btns(true)}`);
+ $("#no").onclick=closeModal;
+ $("#dl").onclick=async()=>{if(confirm(t("confirmDel"))){await Store.remove("stays",sid);closeModal();reload()}};
+ $("#ok").onclick=()=>guarded(async()=>{
+  const ja=$("#layer .p_ja").value.trim(),ro=$("#layer .p_ro").value.trim();
+  let pid=s.personId;
+  if(pid&&(ja||ro)){await Store.upsert("persons",{...p,nameJa:ja,nameRo:ro})}
+  else if(!pid&&(ja||ro))pid=await ensurePerson(ja,ro);
+  await Store.upsert("stays",{...s,personId:pid,role:$("#f_role").value,moveIn:$("#f_in").value,moveOut:$("#f_out").value,memo:$("#f_memo").value.trim()})});
+}
+function formPerson(id){
+ const p=pById(id);
+ modal(`<h2>${t("editPerson")}</h2>${fld("f_ja",t("tenantJa"),p.nameJa)}${fld("f_ro",t("tenantRo"),p.nameRo)}${fld("f_memo",t("memo"),p.memo)}${btns()}`);
+ $("#no").onclick=closeModal;
+ $("#ok").onclick=()=>guarded(async()=>{await Store.upsert("persons",{...p,nameJa:$("#f_ja").value.trim(),nameRo:$("#f_ro").value.trim(),memo:$("#f_memo").value.trim()})});
+}
+function formSettings(){
+ const c=cfg();
+ modal(`<h2>${t("setTitle")}</h2>${fld("s_url",t("setUrl"),c.url)}${fld("s_tok",t("setTok"),c.tok,"password")}${btns()}`);
+ $("#no").onclick=closeModal;
+ $("#ok").onclick=()=>{localStorage.setItem("api_url",$("#s_url").value.trim());localStorage.setItem("api_tok",$("#s_tok").value);closeModal();reload()};
+}
+
+/* =====================================================================
+ * Eventos
+ * =================================================================== */
+document.addEventListener("click",e=>{
+ const el=e.target.closest("[data-act]");if(!el)return;
+ const a=el.dataset.act,id=el.dataset.id;
+ if(a==="thumb"){const m=$("#mainph");if(m){m.src=thumb(el.dataset.src,900);m.dataset.src=thumb(el.dataset.src,1600)}}
+ else if(a==="lb"){const l=document.createElement("div");l.className="lightbox";l.innerHTML=`<img src="${esc(el.dataset.src)}">`;l.onclick=()=>l.remove();document.body.appendChild(l)}
+ else if(a==="checkin")formCheckin(id);
+ else if(a==="checkout")formCheckout(id);
+ else if(a==="editUnit")formUnit(id);
+ else if(a==="editStay")formStay(id);
+ else if(a==="editPerson")formPerson(id);
+ else if(a==="editBld")formBld(id);
+ else if(a==="addUnits")formAddUnits(id);
+ else if(a==="delBld"){if(unitsOf(id).length)return alert(t("delGuardB"));if(confirm(t("confirmDel")))Store.remove("buildings",id).then(reload)}
+ else if(a==="backup"){const bl=new Blob([JSON.stringify(D,null,1)],{type:"application/json"});const x=document.createElement("a");x.href=URL.createObjectURL(bl);x.download="imoveis-backup-"+today()+".json";x.click()}
+});
+$("#home").onclick=()=>nav("");
+$("#bPeople").onclick=()=>nav("people");
+$("#bAdmin").onclick=()=>nav("admin");
+$("#bSet").onclick=formSettings;
+$("#lang").onchange=e=>{lang=e.target.value;localStorage.setItem("lang",lang);render()};
+reload();
+</script>
+</body>
+</html>
