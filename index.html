@@ -89,12 +89,35 @@ h3.sec{margin:20px 0 8px;font-size:16px}
  main{padding:12px}
  .modal{padding:10px}.modal .box{padding:14px}
 }
+
+/* relatório */
+.rt{width:100%;border-collapse:collapse;font-size:13px}
+.rt th,.rt td{border:1px solid #cfd6dd;padding:5px 7px;vertical-align:top;text-align:left}
+.rt th{background:#eef3f8;color:var(--ink);font-weight:600;white-space:nowrap}
+.rt small{display:block;color:var(--mut);font-size:11px}
+.rt td.num{text-align:right;white-space:nowrap}
+.rwrap{overflow-x:auto}
+.rtitle{margin:0 0 2px;font-size:20px}
+h3.rh{margin:18px 0 6px;font-size:15px}
+.rctl{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+.rctl .f{margin:0}.rctl input,.rctl select{width:auto}
+@media print{
+ header,.demo,.noprint,#layer,.toast{display:none!important}
+ body{background:#fff;color:#000}
+ main{max-width:none;padding:0}
+ .tile{box-shadow:none;border:1px solid #999;border-radius:0}
+ .rt{font-size:10px}.rt th{background:#e8e8e8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .rt tr{page-break-inside:avoid}
+ h3.rh{page-break-after:avoid}
+}
 </style>
+<style id="pageStyle">@page{size:A4 landscape;margin:10mm}</style>
 </head>
 <body>
 <header>
   <h1 id="home">🏠 <span id="ttl"></span></h1>
   <button id="bPeople"></button>
+  <button id="bRep"></button>
   <button id="bAdmin"></button>
   <button id="bSet">⚙️</button>
   <select id="lang"><option value="pt">Português</option><option value="ja">日本語</option></select>
@@ -179,6 +202,10 @@ stays:["Moradias","入居履歴"],since:["desde","から"],now:["atual","現在"
 residence:["Mora em","現在の部屋"],nStays:["moradia(s)","件の入居"],
 editPerson:["Editar morador","入居者を編集"],
 backup:["Baixar backup (JSON)","バックアップ(JSON)"],
+report:["Relatório","月次報告"],repMonth:["Mês","月"],repYear:["Ano","年"],repPeriod:["Período","期間"],repHm:["Incluir coabitantes","同居人を含める"],
+repPrint:["🖨️ Imprimir / salvar PDF","🖨️ 印刷 / PDF保存"],repCsv:["📥 Baixar Excel (CSV)","📥 Excel(CSV)"],repOrient:["Orientação do papel","用紙の向き"],
+repLand:["Horizontal","横"],repPort:["Vertical","縦"],repNone:["Nenhuma movimentação neste período.","この期間の入退去はありません。"],
+repHelp:["Para PDF: clique em Imprimir e escolha “Salvar como PDF” como impressora (A4).","PDFにするには、印刷を押してプリンターで「PDFに保存」を選びます(A4)。"],
 markOwn:["Instalado no apto","備付(設置済み)"],markCo:["Da empreiteira","会社所有"],markNo:["Não tem (morador tem o seu)","なし(入居者所有)"],markUnk:["Não informado","未入力"],
 markOwnS:["instalado","備付"],markCoS:["empreiteira","会社所有"],
 legend:["〇 já vem instalado no apartamento · ● da empreiteira (propriedade dela) · × não tem (o morador tem o seu)","〇 備付 · ● 会社所有 · × なし(入居者所有)"],
@@ -309,11 +336,11 @@ function nav(h){if(location.hash==="#"+h)render();else location.hash=h}
  * =================================================================== */
 function render(){
  document.documentElement.lang=lang==="pt"?"pt":"ja";
- $("#ttl").textContent=t("title");$("#bPeople").textContent="👥 "+t("people");$("#bAdmin").textContent="✏️ "+t("admin");
+ $("#ttl").textContent=t("title");$("#bPeople").textContent="👥 "+t("people");$("#bAdmin").textContent="✏️ "+t("admin");$("#bRep").textContent="📊 "+t("report");
  $("#lang").value=lang;$("#demo").style.display=isDemo()?"block":"none";$("#demo").textContent=t("demo");
  const parts=location.hash.replace(/^#\/?/,"").split("/");const [v,a,b]=parts;
  if(v==="b")rBuilding(a);else if(v==="u")rUnit(a);else if(v==="insp")rInspect(a,b);
- else if(v==="people")rPeople();else if(v==="p")rPerson(a);else if(v==="admin")rAdmin();else rHome();
+ else if(v==="people")rPeople();else if(v==="p")rPerson(a);else if(v==="admin")rAdmin();else if(v==="report")rReport();else rHome();
 }
 window.addEventListener("hashchange",()=>{render();window.scrollTo(0,0)});
 
@@ -512,6 +539,90 @@ function drawItems(u){
 }
 
 /* ---------- Cadastro ---------- */
+
+/* ---------- Relatório de movimentação ---------- */
+const REP={mode:"month",month:today().slice(0,7),year:today().slice(0,4),hm:true,orient:"landscape"};
+function repRange(){
+ if(REP.mode==="year")return[REP.year+"-01-01",REP.year+"-12-31"];
+ const[y,m]=REP.month.split("-").map(Number),last=new Date(y,m,0).getDate();
+ return[REP.month+"-01",REP.month+"-"+String(last).padStart(2,"0")];
+}
+function repData(){
+ const[from,to]=repRange(),ok=s=>REP.hm||s.role!==ROLE_H;
+ const key=s=>{const u=uById(s.unitId)||{},b=bById(u.buildingId)||{};return(b.name||"")+" "+String(u.number||"").padStart(8,"0")};
+ const by=f=>(a,b)=>a[f].localeCompare(b[f])||key(a).localeCompare(key(b));
+ const ins=D.stays.filter(s=>ok(s)&&s.moveIn&&s.moveIn>=from&&s.moveIn<=to).sort(by("moveIn"));
+ const outs=D.stays.filter(s=>ok(s)&&s.moveOut&&s.moveOut>=from&&s.moveOut<=to).sort(by("moveOut"));
+ const act=D.stays.filter(s=>(!s.moveIn||s.moveIn<=to)&&(!s.moveOut||s.moveOut>to)&&uById(s.unitId));
+ const occ=[...new Set(act.map(s=>s.unitId))];
+ const rentSum=occ.reduce((a,id)=>a+(Number(uById(id).rent)||0),0);
+ return{from,to,ins,outs,people:act.filter(ok).length,occ:occ.length,vac:D.units.length-occ.length,rentSum};
+}
+const rpCell=p=>p?`${esc(p.nameJa||p.nameRo)}${p.nameJa&&p.nameRo?`<small>${esc(p.nameRo)}</small>`:""}`:`<span class="mut">${t("unknownName")}</span>`;
+const rbCell=b=>b?`${esc(b.name)}${b.namePt?`<small>${esc(b.namePt)}</small>`:""}`:"—";
+const rRole=r=>r===ROLE_H?"同居人<small>Coabitante</small>":"契約者<small>Titular</small>";
+function repPeriodLabel(){
+ if(REP.mode==="year")return REP.year+"年 / "+REP.year;
+ const[y,m]=REP.month.split("-").map(Number);
+ const pt=new Date(y,m-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+ return y+"年"+m+"月 / "+pt;
+}
+function rReport(){
+ const R=repData();
+ const row=(s,kind)=>{const u=uById(s.unitId)||{},b=bById(u.buildingId),p=pById(s.personId);
+  return kind==="in"
+  ?`<tr><td>${fmt(s.moveIn)}</td><td>${rbCell(b)}</td><td>${esc(u.number||"")}</td><td>${rpCell(p)}</td><td>${rRole(s.role)}</td><td class="num">${yen(u.rent)}</td><td>${esc(s.memo)}</td></tr>`
+  :`<tr><td>${fmt(s.moveOut)}</td><td>${rbCell(b)}</td><td>${esc(u.number||"")}</td><td>${rpCell(p)}</td><td>${rRole(s.role)}</td><td>${fmt(s.moveIn)}</td><td>${s.moveIn?dur(s.moveIn,s.moveOut):"—"}</td><td>${esc(s.memo)}</td></tr>`};
+ const table=(head,rows)=>rows.length?`<div class="rwrap"><table class="rt"><thead><tr>${head.map(x=>`<th>${x[0]}<small>${x[1]}</small></th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`:`<p class="mut">${t("repNone")}</p>`;
+ let monthly="";
+ if(REP.mode==="year"){
+  const ms=[...Array(12)].map((_,i)=>REP.year+"-"+String(i+1).padStart(2,"0"));
+  monthly=`<h3 class="rh">月別 / Por mês</h3><div class="rwrap"><table class="rt" style="max-width:420px"><thead><tr><th>月<small>Mês</small></th><th>入居<small>Entradas</small></th><th>退去<small>Saídas</small></th></tr></thead><tbody>${ms.map(m=>`<tr><td>${m}</td><td class="num">${R.ins.filter(s=>s.moveIn.startsWith(m)).length}</td><td class="num">${R.outs.filter(s=>s.moveOut.startsWith(m)).length}</td></tr>`).join("")}</tbody></table></div>`;
+ }
+ $("#app").innerHTML=`
+ <div class="noprint crumb"><a href="#/">← ${t("buildings")}</a></div>
+ <div class="noprint card pad" style="margin-bottom:14px"><div class="rctl">
+  <div class="f"><label>${t("repPeriod")}</label><select id="r_mode"><option value="month" ${REP.mode==="month"?"selected":""}>${t("repMonth")}</option><option value="year" ${REP.mode==="year"?"selected":""}>${t("repYear")}</option></select></div>
+  <div class="f"><label>&nbsp;</label>${REP.mode==="month"?`<input type="month" id="r_month" value="${REP.month}">`:`<input type="number" id="r_year" min="2000" max="2100" value="${REP.year}" style="width:100px">`}</div>
+  <div class="f"><label>${t("repOrient")}</label><select id="r_or"><option value="landscape" ${REP.orient==="landscape"?"selected":""}>${t("repLand")}</option><option value="portrait" ${REP.orient==="portrait"?"selected":""}>${t("repPort")}</option></select></div>
+  <label class="chk" style="display:flex;gap:5px;align-items:center;font-size:14px;padding-bottom:8px"><input type="checkbox" id="r_hm" ${REP.hm?"checked":""} style="width:auto"> ${t("repHm")}</label>
+  <button class="btn" id="r_print">${t("repPrint")}</button><button class="btn sec" id="r_csv">${t("repCsv")}</button></div>
+  <div class="mut" style="font-size:12px">${t("repHelp")}</div></div>
+ <div class="card pad">
+  <h2 class="rtitle">入退去報告書 <span class="mut" style="font-size:14px;font-weight:400">/ Relatório de movimentação de moradores</span></h2>
+  <div><b>${repPeriodLabel()}</b> <span class="mut">(${R.from} 〜 ${R.to}) · 作成日 / Gerado em ${today()}</span></div>
+  <div class="tiles" style="margin-top:12px">
+   <div class="tile"><b style="color:var(--ok)">${R.ins.length}</b><span>入居 / Entradas</span></div>
+   <div class="tile"><b style="color:var(--bad)">${R.outs.length}</b><span>退去 / Saídas</span></div>
+   <div class="tile"><b>${R.people}</b><span>入居者数(期末) / Moradores no fim</span></div>
+   <div class="tile"><b>${R.occ} / ${R.occ+R.vac}</b><span>入居中の部屋 / Aptos ocupados</span></div>
+   <div class="tile"><b>${yen(R.rentSum)}</b><span>賃料合計(入居中) / Soma dos aluguéis</span></div></div>
+  ${monthly}
+  <h3 class="rh">入居 / Entradas (${R.ins.length})</h3>
+  ${table([["入居日","Entrada"],["物件","Imóvel"],["号室","Nº"],["入居者","Morador"],["区分","Tipo"],["賃料","Aluguel"],["備考","Obs."]],R.ins.map(s=>row(s,"in")))}
+  <h3 class="rh">退去 / Saídas (${R.outs.length})</h3>
+  ${table([["退去日","Saída"],["物件","Imóvel"],["号室","Nº"],["入居者","Morador"],["区分","Tipo"],["入居日","Entrada"],["居住期間","Permanência"],["備考","Obs."]],R.outs.map(s=>row(s,"out")))}
+  <p class="mut" style="font-size:11px;margin-top:12px">— = 日付未登録 / data não registrada. 期末 = ${R.to} 終了時点 / fim do período (${R.to}).</p></div>`;
+ const ch=()=>rReport();
+ $("#r_mode").onchange=e=>{REP.mode=e.target.value;ch()};
+ if($("#r_month"))$("#r_month").onchange=e=>{if(e.target.value){REP.month=e.target.value;ch()}};
+ if($("#r_year"))$("#r_year").onchange=e=>{if(e.target.value){REP.year=String(e.target.value);ch()}};
+ $("#r_or").onchange=e=>{REP.orient=e.target.value};
+ $("#r_hm").onchange=e=>{REP.hm=e.target.checked;ch()};
+ $("#r_print").onclick=()=>{$("#pageStyle").textContent="@page{size:A4 "+REP.orient+";margin:10mm}";window.print()};
+ $("#r_csv").onclick=()=>repCSV(R);
+}
+function repCSV(R){
+ const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+ const head=["区分 / Tipo","日付 / Data","物件名 / Imóvel","ローマ字名 / Romaji","号室 / Nº","氏名 / Nome (JA)","ローマ字 / Nome (romaji)","役割 / Função","入居日 / Entrada","退去日 / Saída","居住期間 / Permanência","賃料 / Aluguel","備考 / Obs."];
+ const line=(k,date,s)=>{const u=uById(s.unitId)||{},b=bById(u.buildingId)||{},p=pById(s.personId)||{};
+  return[k,date,b.name||"",b.namePt||"",u.number||"",p.nameJa||"",p.nameRo||"",s.role===ROLE_H?"同居人 / Coabitante":"契約者 / Titular",s.moveIn||"",s.moveOut||"",s.moveIn&&s.moveOut?dur(s.moveIn,s.moveOut):"",u.rent||"",s.memo||""]};
+ const rows=[...R.ins.map(s=>line("入居 / Entrada",s.moveIn,s)),...R.outs.map(s=>line("退去 / Saída",s.moveOut,s))].sort((a,b)=>a[1].localeCompare(b[1]));
+ const csv="﻿"+[head,...rows].map(r=>r.map(q).join(",")).join("\r\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+ a.download="movimentacao-"+(REP.mode==="year"?REP.year:REP.month)+".csv";a.click();
+}
+
 function rAdmin(){
  $("#app").innerHTML=`<div class="crumb"><a href="#/">← ${t("buildings")}</a></div>
  <div class="bar"><button class="btn" data-act="editBld" data-id="">${t("newBuilding")}</button><button class="btn sec" data-act="backup">💾 ${t("backup")}</button></div>
@@ -701,6 +812,7 @@ document.addEventListener("click",e=>{
 $("#home").onclick=()=>nav("");
 $("#bPeople").onclick=()=>nav("people");
 $("#bAdmin").onclick=()=>nav("admin");
+$("#bRep").onclick=()=>nav("report");
 $("#bSet").onclick=formSettings;
 $("#lang").onchange=e=>{lang=e.target.value;localStorage.setItem("lang",lang);render()};
 reload();
