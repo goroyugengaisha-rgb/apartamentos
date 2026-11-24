@@ -352,32 +352,36 @@ window.addEventListener("hashchange",()=>{render();window.scrollTo(0,0)});
 /* =====================================================================
  * Telas
  * =================================================================== */
-let HOME={q:"",onlyVac:false},BF="all",PQ="";
+let HOME={q:"",f:""},BF="all",PQ="";
 function rHome(){
  const q=HOME.q.toLowerCase();
  let bs=D.buildings.filter(b=>(b.name+" "+(b.namePt||"")+" "+(b.address||"")+" "+(b.addressRo||"")).toLowerCase().includes(q));
  const cnt=bid=>{let v=0,o=0,r=0,n=0;unitsOf(bid).forEach(u=>{n++;const c=status(u).code;c==="vac"?v++:c==="occ"?o++:r++});return{n,v,o,r}};
- if(HOME.onlyVac)bs=bs.filter(b=>cnt(b.id).v>0);
- let T={n:0,v:0,o:0,r:0,l:0};const lim=new Date(Date.now()+30*864e5).toISOString().slice(0,10);
+ const lim=new Date(Date.now()+30*864e5).toISOString().slice(0,10);
+ const pred={vac:u=>status(u).code==="vac",res:u=>status(u).code==="res",leave:u=>{const s=status(u);return!!(s.leaving&&s.leaving<=lim)}}[HOME.f];
+ const dt=u=>{const s=status(u);return HOME.f==="leave"?s.leaving:HOME.f==="res"&&s.fut&&s.fut[0]?s.fut[0].moveIn:""};
+ if(pred)bs=bs.filter(b=>unitsOf(b.id).some(pred));
+ let T={n:0,v:0,o:0,r:0,l:0};
  D.units.forEach(u=>{const s=status(u);T.n++;s.code==="vac"?T.v++:s.code==="occ"?T.o++:T.r++;if(s.leaving&&s.leaving<=lim)T.l++});
  $("#app").innerHTML=`
  <div class="tiles">
   <div class="tile"><b>${T.n}</b><span>${t("tAll")}</span></div>
-  <div class="tile" id="tv" role="button" tabindex="0" style="cursor:pointer;${HOME.onlyVac?"outline:3px solid var(--ok);":""}"><b style="color:var(--ok)">${T.v}</b><span>${t("tVac")} 👆</span></div>
+  <div class="tile" id="tv" role="button" tabindex="0" style="cursor:pointer;${HOME.f==="vac"?"outline:3px solid var(--ok);":""}"><b style="color:var(--ok)">${T.v}</b><span>${t("tVac")} 👆</span></div>
   <div class="tile"><b style="color:var(--bad)">${T.o}</b><span>${t("tOcc")}</span></div>
-  <div class="tile"><b style="color:var(--warn)">${T.r}</b><span>${t("tRes")}</span></div>
-  <div class="tile"><b style="color:var(--warn)">${T.l}</b><span>${t("tLeave")}</span></div></div>
+  <div class="tile" id="tr" role="button" tabindex="0" style="cursor:pointer;${HOME.f==="res"?"outline:3px solid var(--warn);":""}"><b style="color:var(--warn)">${T.r}</b><span>${t("tRes")} 👆</span></div>
+  <div class="tile" id="tl" role="button" tabindex="0" style="cursor:pointer;${HOME.f==="leave"?"outline:3px solid var(--warn);":""}"><b style="color:var(--warn)">${T.l}</b><span>${t("tLeave")} 👆</span></div></div>
  <div class="bar"><input class="grow" id="q" placeholder="${t("search")}" value="${esc(HOME.q)}">
- <label class="mut"><input type="checkbox" id="ov" ${HOME.onlyVac?"checked":""} style="width:auto"> ${t("onlyVac")}</label></div>
+ <label class="mut"><input type="checkbox" id="ov" ${HOME.f==="vac"?"checked":""} style="width:auto"> ${t("onlyVac")}</label></div>
+ ${bs.length?"":`<p class="mut" style="text-align:center;padding:20px">—</p>`}
  <div class="grid">${bs.map(b=>{const c=cnt(b.id);return`
  <a class="card" href="#/b/${b.id}">
  <div class="ph" ${b.exterior?`style="background-image:url('${esc(thumb(b.exterior,500))}')"`:""}>${b.exterior?"":"🏢"}</div>
  <div class="pad"><h3>${esc(bName(b))}</h3><div class="mut">${esc(b.address)}</div>
- <div style="margin-top:6px"><span class="badge b-gray">${c.n} ${t("units")}</span><span class="badge b-vac">${c.v} ${t("vacant")}</span></div>${HOME.onlyVac?`<div style="margin-top:4px">${unitsOf(b.id).filter(u=>status(u).code==="vac").map(u=>`<span class="badge b-vac">${esc(String(u.number))}</span>`).join("")}</div>`:""}
+ <div style="margin-top:6px"><span class="badge b-gray">${c.n} ${t("units")}</span><span class="badge b-vac">${c.v} ${t("vacant")}</span></div>${pred?`<div style="margin-top:4px">${unitsOf(b.id).filter(pred).map(u=>`<span class="badge ${HOME.f==="vac"?"b-vac":"b-res"}">${esc(String(u.number))}${dt(u)?" · "+esc(dt(u)):""}</span>`).join("")}</div>`:""}
  <div class="mut">🚗 ${b.parking?esc(b.parking):"—"} · 🚲 ${b.bikeMin?esc(b.bikeMin)+" "+t("min"):"—"}</div></div></a>`}).join("")}</div>`;
  $("#q").oninput=e=>{HOME.q=e.target.value;const p=e.target.selectionStart;rHome();const i=$("#q");i.focus();i.setSelectionRange(p,p)};
- $("#ov").onchange=e=>{HOME.onlyVac=e.target.checked;rHome()};
- $("#tv").onclick=()=>{HOME.onlyVac=!HOME.onlyVac;rHome();if(HOME.onlyVac)$(".grid").scrollIntoView({behavior:"smooth"})};
+ $("#ov").onchange=e=>{HOME.f=e.target.checked?"vac":"";rHome()};
+ [["tv","vac"],["tr","res"],["tl","leave"]].forEach(([id,f])=>$("#"+id).onclick=()=>{HOME.f=HOME.f===f?"":f;rHome();if(HOME.f)$(".grid").scrollIntoView({behavior:"smooth"})});
 }
 const stBadge=s=>s.code==="vac"?`<span class="badge b-vac">${t("vacant")}</span>`:s.code==="occ"?`<span class="badge b-occ">${t("occupied")}</span>`+(s.leaving?`<span class="badge b-res">${t("leavingOn")} ${s.leaving}</span>`:""):`<span class="badge b-res">${t("reserved")} ${s.fut[0].moveIn}</span>`;
 const shortName=p=>{if(!p)return"";const n=lang==="ja"?(p.nameJa||p.nameRo):(p.nameRo||p.nameJa);return n.split(" ").slice(0,2).join(" ")};
