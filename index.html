@@ -363,7 +363,7 @@ function rHome(){
  $("#app").innerHTML=`
  <div class="tiles">
   <div class="tile"><b>${T.n}</b><span>${t("tAll")}</span></div>
-  <div class="tile"><b style="color:var(--ok)">${T.v}</b><span>${t("tVac")}</span></div>
+  <div class="tile" id="tv" role="button" tabindex="0" style="cursor:pointer;${HOME.onlyVac?"outline:3px solid var(--ok);":""}"><b style="color:var(--ok)">${T.v}</b><span>${t("tVac")} 👆</span></div>
   <div class="tile"><b style="color:var(--bad)">${T.o}</b><span>${t("tOcc")}</span></div>
   <div class="tile"><b style="color:var(--warn)">${T.r}</b><span>${t("tRes")}</span></div>
   <div class="tile"><b style="color:var(--warn)">${T.l}</b><span>${t("tLeave")}</span></div></div>
@@ -373,10 +373,11 @@ function rHome(){
  <a class="card" href="#/b/${b.id}">
  <div class="ph" ${b.exterior?`style="background-image:url('${esc(thumb(b.exterior,500))}')"`:""}>${b.exterior?"":"🏢"}</div>
  <div class="pad"><h3>${esc(bName(b))}</h3><div class="mut">${esc(b.address)}</div>
- <div style="margin-top:6px"><span class="badge b-gray">${c.n} ${t("units")}</span><span class="badge b-vac">${c.v} ${t("vacant")}</span></div>
+ <div style="margin-top:6px"><span class="badge b-gray">${c.n} ${t("units")}</span><span class="badge b-vac">${c.v} ${t("vacant")}</span></div>${HOME.onlyVac?`<div style="margin-top:4px">${unitsOf(b.id).filter(u=>status(u).code==="vac").map(u=>`<span class="badge b-vac">${esc(String(u.number))}</span>`).join("")}</div>`:""}
  <div class="mut">🚗 ${b.parking?esc(b.parking):"—"} · 🚲 ${b.bikeMin?esc(b.bikeMin)+" "+t("min"):"—"}</div></div></a>`}).join("")}</div>`;
  $("#q").oninput=e=>{HOME.q=e.target.value;const p=e.target.selectionStart;rHome();const i=$("#q");i.focus();i.setSelectionRange(p,p)};
  $("#ov").onchange=e=>{HOME.onlyVac=e.target.checked;rHome()};
+ $("#tv").onclick=()=>{HOME.onlyVac=!HOME.onlyVac;rHome();if(HOME.onlyVac)$(".grid").scrollIntoView({behavior:"smooth"})};
 }
 const stBadge=s=>s.code==="vac"?`<span class="badge b-vac">${t("vacant")}</span>`:s.code==="occ"?`<span class="badge b-occ">${t("occupied")}</span>`+(s.leaving?`<span class="badge b-res">${t("leavingOn")} ${s.leaving}</span>`:""):`<span class="badge b-res">${t("reserved")} ${s.fut[0].moveIn}</span>`;
 const shortName=p=>{if(!p)return"";const n=lang==="ja"?(p.nameJa||p.nameRo):(p.nameRo||p.nameJa);return n.split(" ").slice(0,2).join(" ")};
